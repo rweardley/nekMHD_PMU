@@ -74,10 +74,10 @@ print(f"Selecting FLT = {FLT_choice} = {FLT} m")
 # Compare core resolution requirements:
 core_sz_options = {"MHD_core_sz": MHD_core_sz, f"{kolmogorov_multiplier}η": HD_res}
 options = ", ".join(core_sz_options.keys())
-print(f"Comparing xy_core options (minimum): {options}")
+print(f"Comparing core size options (minimum): {options}")
 core_sz_choice = min(core_sz_options, key=core_sz_options.get)
 core_sz = core_sz_options[core_sz_choice]
-print(f"Selecting xy_core = {core_sz_choice} = {core_sz} m")
+print(f"Selecting core_sz = {core_sz_choice} = {core_sz} m")
 
 # calculate settings for geometric boundary layer
 # estimate n from current growth rate, FLT and final layer thickness (xy_core)
@@ -116,9 +116,7 @@ lo_fluid_num_layers = num_layers
 
 # Print low-order mesh parameters
 print("\n--- Low-Order Mesh Parameters ---")
-print(f"Core xy-plane mesh size (lo_delta_xy_core): {lo_delta_core:.6e} m")
-print(f"Axial direction mesh size (lo_delta_z_axial): {lo_delta_core:.6e} m")
-
+print(f"Core mesh size (lo_delta_core): {lo_delta_core:.6e} m")
 print(f"Fluid first row thickness (lo_fluid_first_row): {lo_fluid_first_row:.6e} m")
 print(f"Fluid growth factor (lo_fluid_growth_factor): {lo_fluid_growth_factor:.2f}")
 print(f"Fluid number of layers (lo_fluid_num_layers): {int(lo_fluid_num_layers)}")
@@ -134,43 +132,31 @@ fluid_lo_total_thickness, fluid_hi_total_thickness = fluid_hi_solution[1]
 
 delta_core = lo_delta_core * polynomial_order
 
-print(f"Core mesh size (hi_delta_core): {delta_core:.6e} m")
+print(f"Core mesh size (delta_core): {delta_core:.6e} m")
 print(f"Fluid first row thickness (fluid_first_row): {fluid_first_row:.6e} m")
 print(f"Fluid growth factor (fluid_growth_factor): {fluid_growth_factor:.2f}")
 print(f"Fluid number of layers (fluid_num_layers): {int(fluid_num_layers)}")
 
-# placeholder
-wall_size = 0.003
+# Set up mesh specs based on the above calculations
+
+bl_y1_size = fluid_first_row  # wedges don't get split in wall normal direction
+bl_fluid_growth = fluid_growth_factor
+bl_fluid_layers = 3
+bl_solid_growth = fluid_growth_factor
+bl_solid_layers = 2
+wall_size = fluid_first_row * 70
+exterior_size = wall_size * 7
 surf_layers = 2    # not quite sure what this one does
-# bulk_size = 0.007
-bulk_size = delta_core
+bulk_size = delta_core * 2  # edges of tets get split in half
 bulk_gradient = 1.1
 bulk_min_num_layers_3d = 3
 bulk_min_num_layers_2d = 2
 bulk_min_num_layers_1d = 1
-# bl_y1_size = 0.0001
-bl_y1_size = fluid_first_row
-# bl_fluid_growth = 1.15
-bl_fluid_growth = fluid_growth_factor
-# bl_fluid_layers = 4
-# bl_fluid_layers = fluid_num_layers
-bl_fluid_layers = 3
-# bl_solid_growth = 1.15
-bl_solid_growth = fluid_growth_factor
-bl_solid_layers = 2
-trimesher_surf_gradation = 1.5
-trimesher_vol_gradation = 1.5
-tetmesher_growth_factor = 1.5
+trimesher_surf_gradation = 1.3
+trimesher_vol_gradation = 1.3
+tetmesher_growth_factor = 1.3
 
-tetmesh_optimise = False
-
-# Steps:
-# Calculate mesh requirements
-# Set boundary layer size
-# Set near-wall tet size
-# Set bulk element size (remember that tets will be split!)
-
-# ''''''''''''
+tetmesh_optimise = True
 
 ### Load and Prepare Geometry ###
 
@@ -228,7 +214,7 @@ cubit.cmd("surf all scheme trimesh")
 cubit.cmd("mesh surface in boundary_surfs")
 
 # test: coarsely mesh exterior surfaces
-cubit.cmd(f"surface {surf_external} size {wall_size*5}")
+cubit.cmd(f"surface {surf_external} size {exterior_size}")
 cubit.cmd(f"mesh surface {surf_external}")
 
 # tetmesher settings
@@ -262,78 +248,6 @@ cubit.cmd(f"volume in vol_solid tetmesh growth_factor {tetmesher_growth_factor}"
 cubit.cmd("mesh volume in vol_solid")
 cubit.cmd("mesh volume in vol_fluid")
 
-# ### Generate Geometry ###
-
-# cubit.cmd(f"cylinder height {L_z} radius {L_r}")  # fluid region
-
-# # Rotate to align with coordinate system
-# # u_in=(u_in,0,0)
-# # B_0=(0,0,B_0)
-# cubit.cmd("rotate volume all angle 90 about y include_merged")
-
-# # Move domain so it runs from -0.26 to +0.35
-# cubit.cmd("move vol 1 x 0.045")
-
-# # Note, at this point:
-# # Axial direction is now x
-# # Centroid is at (0,0,0)
-# # Volume 1    = fluid region
-# # Surface 1   = wall
-# # Surface 2   = inlet
-# # Surface 3   = outlet
-
-# ### Create named sidesets ###
-
-# # create named sidesets
-
-# cubit.cmd("sideset 1 add surface 2")
-# cubit.cmd('sideset 1 name "inlet"')
-# cubit.cmd("sideset 2 add surface 3")
-# cubit.cmd('sideset 2 name "outlet"')
-# cubit.cmd("sideset 3 add surface 1")
-# cubit.cmd('sideset 3 name "walls"')
-
-# # # # ### Set up boundary layers ###
-
-# # Create Hartmann layer in fluid region
-# cubit.cmd("create boundary_layer 1")
-# cubit.cmd(f"modify boundary_layer 1 uniform height {fluid_first_row} growth {fluid_growth_factor} layers {fluid_num_layers}")
-# cubit.cmd("modify boundary_layer 1 add surface 1 volume 1")
-# cubit.cmd("modify boundary_layer 1 continuity off")
-
-# ### Generate Mesh ###
-
-# # create element blocks
-# cubit.cmd("block 1 add volume 1")
-
-# if high_order:
-#     # set element type
-#     cubit.cmd("block 1 element type hex20")
-
-#     # Force nodes to follow curved surfaces (walls)
-#     cubit.cmd("set node constraint on")
-
-# # Set mesh size for axial resolution (on all volumes)
-
-# # Set mesh size for axial resolution (on all volumes)
-# cubit.cmd(f"volume 1 size {delta_z_axial}")
-
-# # Set approximate mesh size for core (on inlet surface)
-
-# cubit.cmd(f"surface 2 size {delta_xy_core}")
-
-# # Mesh inlet
-
-# cubit.cmd("surface 2 scheme pave")
-# cubit.cmd("mesh surface 2")
-
-# # Sweep mesh through volume
-# cubit.cmd("volume 1 redistribute nodes off")
-# cubit.cmd("volume 1 scheme Sweep source surface 2 target surface 3 sweep transform least squares")
-# cubit.cmd("volume 1 autosmooth target on fixed imprints off smart smooth off")
-# cubit.cmd("mesh volume 1")
-
-
 ### Nondimensionalise geometry and mesh length scale ###
 
 if nondimensionalise:
@@ -345,3 +259,19 @@ cubit.cmd("set exodus netcdf4 off")
 cubit.cmd("set large exodus file on")
 cubit.cmd(f'export mesh "{out_meshname}_fluid.exo" block 1 overwrite')
 cubit.cmd(f'export mesh "{out_meshname}_solid.exo" block 2 overwrite')
+
+### Calculate number of hex elements this will create in .re2 mesh ###
+
+num_tets = len(cubit.parse_cubit_list("tet", "all"))
+num_wedges = len(cubit.parse_cubit_list("wedge", "all"))
+
+print(f"Total number of tets:  \t{num_tets:.3e}")
+print(f"Total number of wedges:\t{num_wedges:.3e}")
+
+num_re2_hexes = 3 * num_wedges + 4 * num_tets
+num_QPs = num_re2_hexes * polynomial_order**3
+
+print(f"Expected num .re2 hexes:\t{num_re2_hexes:.3e}")
+print(f"Expected NekRS QPs:     \t{num_QPs:.3e}")
+print(f"30M DOFs/GPU requires {np.ceil(num_QPs/(30e6))} GPUs")
+print(f"8 GPUs per node requires {np.ceil(num_QPs/(8*30e6))} nodes")
