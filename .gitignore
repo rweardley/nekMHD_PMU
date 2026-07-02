@@ -1,0 +1,44 @@
+.cache
+*0.f*
+*.nek5000
+*.log
+log.*
+*.tar
+*.tgz
+*.tar.gz
+*.his
+*.fld
+*.out
+
+# CAD formats
+*.stp
+*.step
+
+# mesh formats
+*.re2
+*.rea
+!base.rea
+*.co2
+*.exo
+*.e
+*.cub5
+
+# editors
+.vscode
+
+# postprocessing
+*.csv
+*.txt
+*.png
+*.jpg
+*.jpeg
+*.tsv
+*.pdf
+
+# slurm outputs
+slurm-*.out
+machine.file.*
+
+# python
+
+__pycache__
