@@ -1,0 +1,3 @@
+[submodule "nekrs_mhd_examples"]
+	path = nekrs_mhd_examples
+	url = git@github.com:rweardley/nekrs_mhd_examples.git
