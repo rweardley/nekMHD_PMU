@@ -17,6 +17,7 @@ nondimensionalise = True
 
 polynomial_order = 9
 bl_growth_rate = 1.15
+# MHD_first_layer_multiplier = 0.5
 MHD_first_layer_multiplier = 0.2
 num_qps_in_first_layer = 1
 
