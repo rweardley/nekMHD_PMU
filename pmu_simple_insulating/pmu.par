@@ -5,6 +5,9 @@ dt =  2.0e-4
 timeStepper = tombo2
 writeInterval = 1000
 
+[MESH]
+file = "pmu_fluid.re2"
+
 [PROBLEMTYPE]
 equation = navierStokes
 
