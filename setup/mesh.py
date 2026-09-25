@@ -1,3 +1,5 @@
+# Script created for Coreform Cubit 2025.8
+
 import cubit
 import sys
 import numpy as np
@@ -17,8 +19,8 @@ nondimensionalise = True
 
 polynomial_order = 9
 bl_growth_rate = 1.15
-# MHD_first_layer_multiplier = 0.5
-MHD_first_layer_multiplier = 0.2
+MHD_first_layer_multiplier = 0.5
+#MHD_first_layer_multiplier = 0.3
 num_qps_in_first_layer = 1
 
 # Set reference length for nondimensionalisation
@@ -147,7 +149,7 @@ bl_solid_growth = fluid_growth_factor
 bl_solid_layers = 2
 wall_size = fluid_first_row * 70
 exterior_size = wall_size * 7
-surf_layers = 2    # not quite sure what this one does
+surf_layers = 2  # not quite sure what this one does
 bulk_size = delta_core * 2  # edges of tets get split in half
 bulk_gradient = 1.1
 bulk_min_num_layers_3d = 3
@@ -248,6 +250,27 @@ cubit.cmd(f"volume in vol_solid tetmesh growth_factor {tetmesher_growth_factor}"
 
 cubit.cmd("mesh volume in vol_solid")
 cubit.cmd("mesh volume in vol_fluid")
+
+# create surface groups
+
+cubit.cmd('group "inlet" add surf 131')
+cubit.cmd('group "outlet" add surf 132')
+cubit.cmd('group "fs_interface" add surf 1 to 8 10 to 53 55 57 to 60 63 to 67')
+cubit.cmd('group "exterior" add surf 9 54 61 62 68')
+cubit.cmd('group "first_wall" add surf 56')
+
+# add surfaces to sidesets
+
+cubit.cmd("sideset 1 add surface in inlet")
+cubit.cmd('sideset 1 name "inlet"')
+cubit.cmd("sideset 2 add surface in outlet")
+cubit.cmd('sideset 2 name "outlet"')
+cubit.cmd("sideset 3 add surface in fs_interface")
+cubit.cmd('sideset 3 name "fs_interface"')
+cubit.cmd("sideset 4 add surface in exterior")
+cubit.cmd('sideset 4 name "exterior"')
+cubit.cmd("sideset 5 add surface in first_wall")
+cubit.cmd('sideset 5 name "first_wall"')
 
 ### Nondimensionalise geometry and mesh length scale ###
 
