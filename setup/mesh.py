@@ -20,7 +20,7 @@ nondimensionalise = True
 polynomial_order = 9
 bl_growth_rate = 1.15
 MHD_first_layer_multiplier = 0.5
-#MHD_first_layer_multiplier = 0.3
+# MHD_first_layer_multiplier = 0.3
 num_qps_in_first_layer = 1
 
 # Set reference length for nondimensionalisation
@@ -29,9 +29,11 @@ ref_length = 0.231
 
 Ha = 18468.36
 
-surf_external = "9 54 56 61 62 68"
+surf_external = "9 54 61 62 68"
 surf_inlet = 132
 surf_outlet = 131
+surf_first_wall = 56
+
 
 ### Mesh calculations ###
 
@@ -175,10 +177,32 @@ cubit.cmd('create group "vol_fluid"')
 cubit.cmd("vol_fluid add volume 2")
 
 cubit.cmd('create group "boundary_surfs"')
-cubit.cmd("boundary_surfs add surface all")
-cubit.cmd(f"boundary_surfs remove surface {surf_inlet}")
-cubit.cmd(f"boundary_surfs remove surface {surf_outlet}")
-cubit.cmd(f"boundary_surfs remove surface {surf_external}")
+
+cubit.cmd(f'group "inlet" add surf {surf_inlet}')
+cubit.cmd(f'group "outlet" add surf {surf_outlet}')
+
+cubit.cmd('create group "fs_interface"')
+cubit.cmd("fs_interface add surface all")
+cubit.cmd(f"fs_interface remove surface {surf_inlet}")
+cubit.cmd(f"fs_interface remove surface {surf_outlet}")
+cubit.cmd(f"fs_interface remove surface {surf_external}")
+cubit.cmd(f"fs_interface remove surface {surf_first_wall}")
+
+cubit.cmd(f'group "exterior" add surf {surf_external}')
+cubit.cmd(f'group "first_wall" add surf {surf_first_wall}')
+
+# add surfaces to sidesets
+
+cubit.cmd("sideset 1 add surface in inlet")
+cubit.cmd('sideset 1 name "inlet"')
+cubit.cmd("sideset 2 add surface in outlet")
+cubit.cmd('sideset 2 name "outlet"')
+cubit.cmd("sideset 3 add surface in fs_interface")
+cubit.cmd('sideset 3 name "fs_interface"')
+cubit.cmd("sideset 4 add surface in exterior")
+cubit.cmd('sideset 4 name "exterior"')
+cubit.cmd("sideset 5 add surface in first_wall")
+cubit.cmd('sideset 5 name "first_wall"')
 
 # create element blocks
 cubit.cmd("block 1 add volume in vol_fluid")
@@ -250,27 +274,6 @@ cubit.cmd(f"volume in vol_solid tetmesh growth_factor {tetmesher_growth_factor}"
 
 cubit.cmd("mesh volume in vol_solid")
 cubit.cmd("mesh volume in vol_fluid")
-
-# create surface groups
-
-cubit.cmd('group "inlet" add surf 131')
-cubit.cmd('group "outlet" add surf 132')
-cubit.cmd('group "fs_interface" add surf 1 to 8 10 to 53 55 57 to 60 63 to 67')
-cubit.cmd('group "exterior" add surf 9 54 61 62 68')
-cubit.cmd('group "first_wall" add surf 56')
-
-# add surfaces to sidesets
-
-cubit.cmd("sideset 1 add surface in inlet")
-cubit.cmd('sideset 1 name "inlet"')
-cubit.cmd("sideset 2 add surface in outlet")
-cubit.cmd('sideset 2 name "outlet"')
-cubit.cmd("sideset 3 add surface in fs_interface")
-cubit.cmd('sideset 3 name "fs_interface"')
-cubit.cmd("sideset 4 add surface in exterior")
-cubit.cmd('sideset 4 name "exterior"')
-cubit.cmd("sideset 5 add surface in first_wall")
-cubit.cmd('sideset 5 name "first_wall"')
 
 ### Nondimensionalise geometry and mesh length scale ###
 
