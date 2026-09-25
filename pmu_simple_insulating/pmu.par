@@ -1,0 +1,31 @@
+[GENERAL]
+polynomialOrder = 5
+numSteps = 10000
+dt =  2.0e-4
+timeStepper = tombo2
+writeInterval = 1000
+
+[PROBLEMTYPE]
+equation = navierStokes
+
+[FLUID PRESSURE]
+residualTol = 1e-7
+preconditioner = multigrid
+smootherType = fourthoptchebyshev+jac
+initialGuess = projection + nVector = 30
+
+[FLUID VELOCITY]
+boundaryTypeMap = v, o, w
+residualTol = 1e-10
+density = 1.0
+viscosity = 1.0/2000 # 1/Re
+initialGuess = projectionAconj+nVector=10
+
+[MHD INDUCTIONLESS]
+boundaryTypeMap = o, o, o
+# Using nondimensionalisation 1 (see README.md)
+bx = 0.0
+by = 1.0
+bz = 0.0
+sigma = 1.0       # ND fluid conductivity: sigma_f [ND]
+lorentzCoeff = 5.0 # Ha^2/Re
