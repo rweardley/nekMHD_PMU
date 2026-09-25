@@ -16,6 +16,7 @@ in_stepname = "'PMU_SMALL_MOD_MHD_origin.stp'"
 out_meshname = "pmu"
 
 nondimensionalise = True
+fluid_only = True
 
 polynomial_order = 9
 bl_growth_rate = 1.15
@@ -177,6 +178,11 @@ cubit.cmd('create group "vol_fluid"')
 cubit.cmd("vol_fluid add volume 2")
 
 cubit.cmd('create group "boundary_surfs"')
+cubit.cmd("boundary_surfs add surface all")
+cubit.cmd(f"boundary_surfs remove surface {surf_inlet}")
+cubit.cmd(f"boundary_surfs remove surface {surf_outlet}")
+cubit.cmd(f"boundary_surfs remove surface {surf_external}")
+cubit.cmd(f"boundary_surfs remove surface {surf_first_wall}")
 
 cubit.cmd(f'group "inlet" add surf {surf_inlet}')
 cubit.cmd(f'group "outlet" add surf {surf_outlet}')
@@ -241,8 +247,8 @@ cubit.cmd("surf all scheme trimesh")
 cubit.cmd("mesh surface in boundary_surfs")
 
 # test: coarsely mesh exterior surfaces
-cubit.cmd(f"surface {surf_external} size {exterior_size}")
-cubit.cmd(f"mesh surface {surf_external}")
+cubit.cmd(f"surface {surf_external} {surf_first_wall} size {exterior_size}")
+cubit.cmd(f"mesh surface {surf_external} {surf_first_wall}")
 
 # tetmesher settings
 
@@ -270,10 +276,12 @@ cubit.cmd(f"volume in vol_solid sizing function type skeleton add size_source su
 cubit.cmd("volume in vol_solid scheme tetmesh")
 cubit.cmd(f"volume in vol_solid tetmesh growth_factor {tetmesher_growth_factor}")
 
-# mesh fluid then solid
+# mesh solid then fluid
 
 cubit.cmd("mesh volume in vol_solid")
 cubit.cmd("mesh volume in vol_fluid")
+
+if fluid_only: cubit.cmd("del volume in vol_solid") # mesh it but delete it to ensure fluid mesh is consistent
 
 ### Nondimensionalise geometry and mesh length scale ###
 
@@ -285,7 +293,8 @@ if nondimensionalise:
 cubit.cmd("set exodus netcdf4 off")
 cubit.cmd("set large exodus file on")
 cubit.cmd(f'export mesh "{out_meshname}_fluid.exo" block 1 overwrite')
-cubit.cmd(f'export mesh "{out_meshname}_solid.exo" block 2 overwrite')
+if not fluid_only:
+    cubit.cmd(f'export mesh "{out_meshname}_solid.exo" block 2 overwrite')
 
 ### Calculate number of hex elements this will create in .re2 mesh ###
 
