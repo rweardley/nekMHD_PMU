@@ -1,0 +1,14 @@
+#!/bin/bash
+
+#SBATCH -J ZEA_PMU
+#SBATCH -A ZEA-P007-ZENITH-GPU
+#SBATCH --nodes=8
+#SBATCH --gres=gpu:8
+#SBATCH --time=12:00:00
+#SBATCH -p mi355x
+#SBATCH --exclusive
+
+CASE_NAME=pmu
+
+source ~/.nekrs_mi355x_nekMHD_v26_260921_profile
+mpirun -np 64 --map-by ppr:8:node nekrs --setup ${CASE_NAME}.par 2>&1 | tee log.run
