@@ -17,6 +17,8 @@ out_meshname = "pmu"
 
 nondimensionalise = True
 fluid_only = True
+fillet_radius = 1e-3 # None for no fillet or set a dimensional radius value
+# fillet_radius = None
 
 polynomial_order = 9
 bl_growth_rate = 1.15
@@ -168,8 +170,8 @@ tetmesh_optimise = True
 
 cubit.cmd(f"import step {in_stepname} noheal")
 
-cubit.cmd("imprint volume all")
-cubit.cmd("merge volume all")
+# cubit.cmd("imprint volume all")
+# cubit.cmd("merge volume all")
 
 cubit.cmd('create group "vol_solid"')
 cubit.cmd("vol_solid add volume 1")
@@ -177,9 +179,46 @@ cubit.cmd("vol_solid add volume 1")
 cubit.cmd('create group "vol_fluid"')
 cubit.cmd("vol_fluid add volume 2")
 
+# make surface groups
+
 cubit.cmd(f'group "inlet" add surf {surf_inlet}')
 cubit.cmd(f'group "outlet" add surf {surf_outlet}')
 
+cubit.cmd('create group "fs_interface_orig"')
+cubit.cmd("fs_interface_orig add surface all")
+cubit.cmd(f"fs_interface_orig remove surface {surf_inlet}")
+cubit.cmd(f"fs_interface_orig remove surface {surf_outlet}")
+cubit.cmd(f"fs_interface_orig remove surface {surf_external}")
+cubit.cmd(f"fs_interface_orig remove surface {surf_first_wall}")
+
+cubit.cmd(f'group "exterior" add surf {surf_external}')
+cubit.cmd(f'group "first_wall" add surf {surf_first_wall}')
+
+# apply fillets to fluid-solid interface
+
+# currently this does it on both the fluid and solid domains
+# the imprint and merge seems to work fine after this
+# however, it might be better to delete the fluid volume
+# then apply fillets on the solid,
+# then recreate the fluid with a boolean
+
+if fillet_radius:
+    cubit.cmd('group "fsi_to_fillet" add curve in surface in fs_interface_orig')
+    cubit.cmd('group "fsi_to_fillet" remove curve in surface in inlet')
+    cubit.cmd('group "fsi_to_fillet" remove curve in surface in outlet')
+    cubit.cmd('group "fsi_to_fillet" remove curve in surface in exterior')
+
+    # cubit.cmd(f"modify curve in fsi_to_fillet blend radius {fillet_radius}")
+    cubit.cmd(f"modify curve in fsi_to_fillet chamfer radius {fillet_radius}")
+
+# imprint and merge
+
+cubit.cmd("imprint volume all")
+cubit.cmd("merge volume all")
+
+# recreate fs_interface; surfaces have now changed
+
+# cubit.cmd('delete fs_interface')
 cubit.cmd('create group "fs_interface"')
 cubit.cmd("fs_interface add surface all")
 cubit.cmd(f"fs_interface remove surface {surf_inlet}")
@@ -187,8 +226,9 @@ cubit.cmd(f"fs_interface remove surface {surf_outlet}")
 cubit.cmd(f"fs_interface remove surface {surf_external}")
 cubit.cmd(f"fs_interface remove surface {surf_first_wall}")
 
-cubit.cmd(f'group "exterior" add surf {surf_external}')
-cubit.cmd(f'group "first_wall" add surf {surf_first_wall}')
+cubit.cmd('create group "fillet_new_surfs"')
+cubit.cmd('fillet_new_surfs add surface in fs_interface')
+cubit.cmd("fillet_new_surfs remove surface in fs_interface_orig")
 
 # add surfaces to sidesets
 
