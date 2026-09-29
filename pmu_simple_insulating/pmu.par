@@ -1,12 +1,18 @@
 [GENERAL]
-polynomialOrder = 5
+polynomialOrder = 7
 numSteps = 400000
-dt = 1.0e-5
+#numSteps = 4000
+#dt = 1.0e-5
+#dt = 5.0e-6
+dt = targetCFL=0.5 + max=1.0e-3 + initial=5.0e-6
 timeStepper = tombo2
 writeInterval = 40000
+#writeInterval = 200
+startFrom="u.fld,b.fld+int"
 
 [MESH]
-file = "pmu_fluid.re2"
+#file = "pmu_fluid.re2"
+file = "pmu_fluid_fillet.re2"
 
 [PROBLEMTYPE]
 equation = navierStokes
@@ -21,7 +27,7 @@ initialGuess = projection + nVector = 30
 boundaryTypeMap = v, o, w
 residualTol = 1e-10
 density = 1.0
-viscosity = 1.0/2000 # 1/Re
+viscosity = 1.0/10000 # 1/Re
 initialGuess = projectionAconj+nVector=10
 
 [MHD INDUCTIONLESS]
@@ -31,4 +37,4 @@ bx = 0.0
 by = 1.0
 bz = 0.0
 sigma = 1.0       # ND fluid conductivity: sigma_f [ND]
-lorentzCoeff = 5.0 # Ha^2/Re
+lorentzCoeff = 1.0 # Ha^2/Re

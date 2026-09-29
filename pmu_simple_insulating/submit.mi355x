@@ -4,7 +4,7 @@
 #SBATCH -A ZEA-P007-ZENITH-GPU
 #SBATCH --nodes=8
 #SBATCH --gres=gpu:8
-#SBATCH --time=12:00:00
+#SBATCH --time=24:00:00
 #SBATCH -p mi355x
 #SBATCH --exclusive
 
