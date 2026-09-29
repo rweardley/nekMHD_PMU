@@ -208,6 +208,7 @@ if fillet_radius:
     cubit.cmd('group "fsi_to_fillet" remove curve in surface in outlet')
     cubit.cmd('group "fsi_to_fillet" remove curve in surface in exterior')
 
+    # Should ideally be a blend, but get many errors that way
     # cubit.cmd(f"modify curve in fsi_to_fillet blend radius {fillet_radius}")
     cubit.cmd(f"modify curve in fsi_to_fillet chamfer radius {fillet_radius}")
 
