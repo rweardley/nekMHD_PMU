@@ -177,13 +177,6 @@ cubit.cmd("vol_solid add volume 1")
 cubit.cmd('create group "vol_fluid"')
 cubit.cmd("vol_fluid add volume 2")
 
-cubit.cmd('create group "boundary_surfs"')
-cubit.cmd("boundary_surfs add surface all")
-cubit.cmd(f"boundary_surfs remove surface {surf_inlet}")
-cubit.cmd(f"boundary_surfs remove surface {surf_outlet}")
-cubit.cmd(f"boundary_surfs remove surface {surf_external}")
-cubit.cmd(f"boundary_surfs remove surface {surf_first_wall}")
-
 cubit.cmd(f'group "inlet" add surf {surf_inlet}')
 cubit.cmd(f'group "outlet" add surf {surf_outlet}')
 
@@ -221,30 +214,24 @@ cubit.cmd("set node constraint on")
 
 # set surface mesh size
 
-cubit.cmd(f"surface in boundary_surfs size {wall_size}")
+cubit.cmd(f"surface in fs_interface size {wall_size}")
 
 # add boundary layers
 
 cubit.cmd("create boundary_layer 1")
 cubit.cmd(f"modify boundary_layer 1 uniform height {bl_y1_size} growth {bl_fluid_growth} layers {bl_fluid_layers}")
-cubit.cmd(f"modify boundary_layer 1 add surface in boundary_surfs volume in vol_fluid")
+cubit.cmd(f"modify boundary_layer 1 add surface in fs_interface volume in vol_fluid")
 cubit.cmd("modify boundary_layer 1 continuity on")
 
 cubit.cmd("create boundary_layer 2")
 cubit.cmd(f"modify boundary_layer 2 uniform height {bl_y1_size} growth {bl_solid_growth} layers {bl_solid_layers}")
-cubit.cmd(f"modify boundary_layer 2 add surface in boundary_surfs volume in vol_solid")
+cubit.cmd(f"modify boundary_layer 2 add surface in fs_interface volume in vol_solid")
 cubit.cmd("modify boundary_layer 2 continuity on")
 
 # Mesh the boundary surfaces
 
 cubit.cmd("surf all scheme trimesh")
-
-# # these don't seem to do anything?
-# cubit.cmd("set trimesher coarse off")
-# cubit.cmd(f"set trimesher surface gradation {trimesher_surf_gradation}")
-# cubit.cmd(f"set trimesher volume gradation {trimesher_vol_gradation}")
-
-cubit.cmd("mesh surface in boundary_surfs")
+cubit.cmd("mesh surface in fs_interface")
 
 # test: coarsely mesh exterior surfaces
 cubit.cmd(f"surface {surf_external} {surf_first_wall} size {exterior_size}")
@@ -263,7 +250,7 @@ if tetmesh_optimise:
 # fluid setup
 
 cubit.cmd(f"volume in vol_fluid sizing function type skeleton min_size auto max_size {bulk_size} max_gradient {bulk_gradient} min_num_layers_3d {bulk_min_num_layers_3d} min_num_layers_2d {bulk_min_num_layers_2d} min_num_layers_1d {bulk_min_num_layers_1d}")
-cubit.cmd(f"volume in vol_fluid sizing function type skeleton add size_source surface in boundary_surfs size {wall_size} num_layers {surf_layers}")
+cubit.cmd(f"volume in vol_fluid sizing function type skeleton add size_source surface in fs_interface size {wall_size} num_layers {surf_layers}")
 
 cubit.cmd("volume in vol_fluid scheme tetmesh")
 cubit.cmd(f"volume in vol_fluid tetmesh growth_factor {tetmesher_growth_factor}")
@@ -271,7 +258,7 @@ cubit.cmd(f"volume in vol_fluid tetmesh growth_factor {tetmesher_growth_factor}"
 # solid setup
 
 cubit.cmd(f"volume in vol_solid sizing function type skeleton min_size auto max_size {bulk_size} max_gradient {bulk_gradient} min_num_layers_3d {bulk_min_num_layers_3d} min_num_layers_2d {bulk_min_num_layers_2d} min_num_layers_1d {bulk_min_num_layers_1d}")
-cubit.cmd(f"volume in vol_solid sizing function type skeleton add size_source surface in boundary_surfs size {wall_size} num_layers {surf_layers}")
+cubit.cmd(f"volume in vol_solid sizing function type skeleton add size_source surface in fs_interface size {wall_size} num_layers {surf_layers}")
 
 cubit.cmd("volume in vol_solid scheme tetmesh")
 cubit.cmd(f"volume in vol_solid tetmesh growth_factor {tetmesher_growth_factor}")
